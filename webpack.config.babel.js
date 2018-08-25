@@ -1,6 +1,7 @@
 import HtmlWebPackPlugin from "html-webpack-plugin";
+import ExtractTextPlugin from "extract-text-webpack-plugin";
 
-export default ( env, argv ) => {
+export default (env, argv) => {
     return {
         module: {
             rules: [{
@@ -10,30 +11,34 @@ export default ( env, argv ) => {
                         loader: "babel-loader"
                     }
                 },
+                // {
+                //     test: /\.(s*)css$/,
+                //     use: [{
+                //             loader: "style-loader",
+                //         },
+                //         {
+                //             loader: "css-loader",
+                //         },
+                //         {
+                //             loader: "sass-loader",
+                //         },
+                //     ]
+                // },
                 {
-                    test: /\.css$/,
-                    use: [{
-                            loader: "style-loader"
-                        },
-                        {
-                            loader: "css-loader",
-                            options: {
-                                modules: true,
-                                importLoaders: 1,
-                                localIdentName: "[name]_[local]_[hash:base64]",
-                                sourceMap: true,
-                                minimize: true
-                            }
-                        }
-                    ]
-                },
+                    test: /\.(s*)css$/,
+                    use: ExtractTextPlugin.extract(
+                      {
+                        fallback: 'style-loader',
+                        use: ['css-loader','sass-loader']
+                      })
+                  },
                 {
                     test: /\.(png|jpg|gif)$/,
                     use: [{
                         loader: 'file-loader',
                         options: {
-                            name ( file ) {
-                                if ( argv.mode === 'development' ) {
+                            name(file) {
+                                if (argv.mode === 'development') {
                                     return 'images/[name].[ext]'
                                 }
                                 return 'images/[hash].[ext]'
@@ -49,7 +54,8 @@ export default ( env, argv ) => {
                 template: "./public/index.html",
                 filename: "./index.html",
                 title: 'React Image Mapper Component',
-            })
-        ]
+            }),
+            new ExtractTextPlugin( { filename: 'style.bundle.css' } ),
+        ],
     }
 }

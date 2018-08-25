@@ -1,5 +1,5 @@
 import React, { Component } from "react"
-import ImageMapperStyles from "./ImageMapper.css"
+import "./ImageMapper.scss"
 
 import sampleImage from '../../../public/images/cakes-chocolate-close-up-959079.jpg'
 // Photo by David Jakab from Pexels
@@ -109,9 +109,9 @@ class ImageMapper extends Component {
             <div>
                 <div className="mapper">
                     { ( this.state.loaded ?
-                        <img className="mapper__layer mapper__layer--background" src={ this.state.image.src } style={ ImageMapperStyles.vectorCanvas } alt="" />    
+                        <img className="mapper__layer mapper__layer--background" src={ this.state.image.src } alt="" />    
                     : null ) }
-                    <svg className="mapper__layer mapper_layer--interactive  mapper_layer--interactive" width="400" viewBox={`0 0 400 400`} onClick={ e => this.addNewPoint( e ) } style={{border: "1px solid #000"}}>
+                    <svg className="mapper__layer mapper_layer--foreground  mapper_layer--interactive" viewBox={`0 0 400 400`} onClick={ e => this.addNewPoint( e ) }>
                         <g className="area">
                             <path className="" d={ areaCoords } stroke="#000000" />
                             { ( points.length > 0 ) ? points.map( ( point, index ) =>
@@ -123,11 +123,11 @@ class ImageMapper extends Component {
                 <div>
                     <p>
                         <label><span>Image src:</span><input name="src" type="text" value={this.state.src} onChange={ e => { this.handleChangeInput(e) } } /></label></p>
-                    <p><input name="coords" type="text" value={this.state.coords} onChange={ e => { this.handleChangeInput(e) } } /></p>
+                    <p><input name="coords" type="text" value={areaCoords} onChange={ e => { this.handleChangeInput(e) } } /></p>
                 </div>
                 <p>Here will be rendered image mapper component :P</p>
                 <p>{this.state.src}</p>
-                <p>{this.state.coords}</p>
+                <p>{areaCoords}</p>
             </div>
         )
     }
