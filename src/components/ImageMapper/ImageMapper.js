@@ -36,12 +36,7 @@ class ImageMapper extends Component {
 
             coords: '',
 
-            points: [
-                // new Point ( 0, 10 ),
-                // new Point ( 10, 10 ),
-                // new Point ( 20, 10 ),
-                // new Point ( 10, 90 ),
-            ],
+            points: [],
             areas: [
                 {
                     points: [],
@@ -50,19 +45,40 @@ class ImageMapper extends Component {
                 }
             ],
         }
+        this.canvas = React.createRef()
+        this.state.handleRadius = 10
+        this.state.pixelScale = 1
 
         this.loadImage = new Promise( ( resolve, reject ) => {
-            this.state.image.onload = () => { resolve() }
-            this.state.image.onerror = () => { reject() }
+            this.state.image.onload = resolve
+            this.state.image.onerror = reject
             this.state.image.src = sampleImage
         } )
     }
 
     componentWillMount() {
+        /**
+         * Wait for image fully loaded.
+         */
         this.loadImage.then( () => {
             this.setState( { loaded: true } )
             console.log( `Image loaded: ${ this.state.image.src }` )
+            this.state.handleRadius = Math.round( ( 10 * this.state.image.naturalWidth ) / this.canvas.getBoundingClientRect().width )
+            this.state.pixelScale = parseFloat( ( 1 * this.state.image.naturalWidth ) / this.canvas.getBoundingClientRect().width ).toFixed( 2 )
         } )
+    }
+    componentDidMount() {
+        window.addEventListener( 'resize', this.updateGUI.bind( this ) )
+    }
+    componentDidUpdate() {
+        console.log( 'width', this.canvas.getBoundingClientRect() )
+    }
+
+    updateGUI() {
+        this.setState({
+            handleRadius: parseFloat( ( 10 * this.state.image.naturalWidth ) / this.canvas.getBoundingClientRect().width ).toFixed( 2 ),
+            pixelScale: parseFloat( ( 1 * this.state.image.naturalWidth ) / this.canvas.getBoundingClientRect().width ).toFixed( 2 )
+        });
     }
 
     handleChangeInput( event ) {
@@ -89,18 +105,24 @@ class ImageMapper extends Component {
             x: ( event.clientX - canvasPosition.x ), // + scrollOffSet.x,
             y: ( event.clientY - canvasPosition.y ), // + scrollOffSet.y,
         }
+        let naturalPointPosition = {
+            x: Math.round( ( relativeCursorPosition.x * this.state.image.naturalWidth ) / canvasScaledSize.width ),
+            y: Math.round( ( relativeCursorPosition.y * this.state.image.naturalHeight ) / canvasScaledSize.height ),
+        }
 
         console.log( scrollOffSet, {x:canvasScaledSize.x,y:canvasScaledSize.y} )
         console.log( canvasScaledSize )
         console.log( `Pointer coords: { X: ${relativeCursorPosition.x}, Y: ${relativeCursorPosition.y} }` )
 
         this.setState( prevState => ({
-            points: [...prevState.points, new Point( relativeCursorPosition.x, relativeCursorPosition.y ) ]
+            points: [...prevState.points, new Point( naturalPointPosition.x, naturalPointPosition.y ) ]
         }))
     }
 
     render() {
+        const image = this.state.image
         const points = this.state.points
+        const scale = this.state.pixelScale
         const areaCoords = points.reduce( ( coords, point, index ) => {
             return `${coords}${( index == 0 ? 'M' : ' L' )} ${point.x} ${point.y}`
         },'')
@@ -111,11 +133,11 @@ class ImageMapper extends Component {
                     { ( this.state.loaded ?
                         <img className="mapper__layer mapper__layer--background" src={ this.state.image.src } alt="" />    
                     : null ) }
-                    <svg className="mapper__layer mapper_layer--foreground  mapper_layer--interactive" viewBox={`0 0 400 400`} onClick={ e => this.addNewPoint( e ) }>
+                    <svg ref={ element => { this.canvas = element } } className="mapper__layer mapper_layer--foreground  mapper_layer--interactive" viewBox={`0 0 ${image.naturalWidth} ${image.naturalHeight}`} onClick={ e => this.addNewPoint( e ) }>
                         <g className="area">
-                            <path className="" d={ areaCoords } stroke="#000000" />
+                            <path className="" d={ areaCoords } stroke="#000000" strokeWidth="0" style={{ opacity: 0.5 }} />
                             { ( points.length > 0 ) ? points.map( ( point, index ) =>
-                                <circle className="handle" key={ index } cx={ point.x } cy={ point.y } r="1.5" stroke="black" strokeWidth="0.5" fill="#ffffff" />
+                                <circle className="handle" key={ index } cx={ point.x } cy={ point.y } r={ scale * 5 } stroke="black" strokeWidth={ scale * 1 } fill="#ffffff" />
                              ) : null }
                         </g>
                     </svg>

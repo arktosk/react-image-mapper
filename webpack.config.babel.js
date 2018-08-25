@@ -11,26 +11,26 @@ export default (env, argv) => {
                         loader: "babel-loader"
                     }
                 },
-                // {
-                //     test: /\.(s*)css$/,
-                //     use: [{
-                //             loader: "style-loader",
-                //         },
-                //         {
-                //             loader: "css-loader",
-                //         },
-                //         {
-                //             loader: "sass-loader",
-                //         },
-                //     ]
-                // },
                 {
                     test: /\.(s*)css$/,
-                    use: ExtractTextPlugin.extract(
-                      {
-                        fallback: 'style-loader',
-                        use: ['css-loader','sass-loader']
-                      })
+                    // use: ExtractTextPlugin.extract(
+                    // {
+                    //     fallback: 'style-loader',
+                    //     use: ['css-loader','sass-loader']
+                    // }),
+                    use() {
+                        if (argv.mode === 'development') {
+                            return ExtractTextPlugin.extract( {
+                                fallback: 'style-loader',
+                                use: ['css-loader','sass-loader']
+                            } )
+                        }
+                        return [
+                            { loader: "style-loader" },
+                            { loader: "css-loader" },
+                            { loader: "sass-loader" },
+                        ]
+                    }
                   },
                 {
                     test: /\.(png|jpg|gif)$/,
