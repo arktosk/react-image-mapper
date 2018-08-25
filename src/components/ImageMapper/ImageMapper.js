@@ -37,6 +37,7 @@ class ImageMapper extends Component {
             coords: '',
 
             points: [],
+            activePoint: -1,
             areas: [
                 {
                     points: [],
@@ -110,22 +111,72 @@ class ImageMapper extends Component {
             y: Math.round( ( relativeCursorPosition.y * this.state.image.naturalHeight ) / canvasScaledSize.height ),
         }
 
-        console.log( scrollOffSet, {x:canvasScaledSize.x,y:canvasScaledSize.y} )
-        console.log( canvasScaledSize )
-        console.log( `Pointer coords: { X: ${relativeCursorPosition.x}, Y: ${relativeCursorPosition.y} }` )
+        this.setState( prevState => {
+            /** Add new point next to active one. */
+            prevState.points.splice( this.state.activePoint + 1, 0, new Point( naturalPointPosition.x, naturalPointPosition.y ) )
 
-        this.setState( prevState => ({
-            points: [...prevState.points, new Point( naturalPointPosition.x, naturalPointPosition.y ) ]
-        }))
+            return {
+                activePoint: this.state.activePoint + 1,
+                points: [ ...prevState.points ]
+            }
+        })
+    }
+
+    /**
+     * Remove point with given index.
+     * 
+     * @param {number} index 
+     */
+    removePoint( index ) {
+        this.setState( prevState => {
+            prevState.points.splice( index, 1 )
+            return {
+                points: [ ...prevState.points ]
+            }
+        })
+    }
+    
+    /**
+     * Select clicked Point.
+     * 
+     * @param {Event} event
+     * @param {number} index
+     */
+    selectPoint( event, index ) {
+        event.preventDefault()
+        event.stopPropagation()
+
+        this.setState( { activePoint: index } )
+    }
+
+    /**
+     * Move curren point.
+     * 
+     * @param {*} event 
+     * 
+     * @todo Make it!
+     */
+    movePoint( event ) {
+        event.preventDefault()
+        event.stopPropagation()
     }
 
     render() {
         const image = this.state.image
+        const active = this.state.activePoint
         const points = this.state.points
         const scale = this.state.pixelScale
         const areaCoords = points.reduce( ( coords, point, index ) => {
             return `${coords}${( index == 0 ? 'M' : ' L' )} ${point.x} ${point.y}`
         },'')
+
+        const Handle = ( point, index ) =>
+            <circle
+                onClick={ event => { this.selectPoint( event, index ) } }
+                onDoubleClick={ () => { this.removePoint( index ) } }
+                className="mapper__handle" key={ index }
+                cx={ point.x } cy={ point.y } r={ ( scale * 5 ) }
+                stroke={ active == index ? "red" : "black" } strokeWidth={ scale * 1 } fill="white" />
 
         return (
             <div>
@@ -136,9 +187,7 @@ class ImageMapper extends Component {
                     <svg ref={ element => { this.canvas = element } } className="mapper__layer mapper_layer--foreground  mapper_layer--interactive" viewBox={`0 0 ${image.naturalWidth} ${image.naturalHeight}`} onClick={ e => this.addNewPoint( e ) }>
                         <g className="area">
                             <path className="" d={ areaCoords } stroke="#000000" strokeWidth="0" style={{ opacity: 0.5 }} />
-                            { ( points.length > 0 ) ? points.map( ( point, index ) =>
-                                <circle className="handle" key={ index } cx={ point.x } cy={ point.y } r={ scale * 5 } stroke="black" strokeWidth={ scale * 1 } fill="#ffffff" />
-                             ) : null }
+                            { ( points.length > 0 ) ? points.map( Handle ) : null }
                         </g>
                     </svg>
                 </div>
@@ -147,7 +196,6 @@ class ImageMapper extends Component {
                         <label><span>Image src:</span><input name="src" type="text" value={this.state.src} onChange={ e => { this.handleChangeInput(e) } } /></label></p>
                     <p><input name="coords" type="text" value={areaCoords} onChange={ e => { this.handleChangeInput(e) } } /></p>
                 </div>
-                <p>Here will be rendered image mapper component :P</p>
                 <p>{this.state.src}</p>
                 <p>{areaCoords}</p>
             </div>
