@@ -192,6 +192,7 @@ class ImageMapper extends Component {
         }
   
         let indexOfClickedPoint =  this.handles.indexOf( event.target )
+
         if ( indexOfClickedPoint != -1 ) {
             this.move.active = indexOfClickedPoint
             this.move.currentPoint = this.state.points[ indexOfClickedPoint ]
@@ -206,8 +207,8 @@ class ImageMapper extends Component {
         this.move.initial.y = this.move.current.y
 
         // console.log( this.handles[ this.move.active ] )
-        // if ( this.move.current.x && this.move.current.y ) 
-        //     this.endMoveTranslate( this.move.current.x, this.move.current.y, this.handles[ this.move.active ] )
+        if ( this.move.current.x && this.move.current.y ) 
+            this.endMoveTranslate( this.move.current.x, this.move.current.y, this.handles[ this.move.active ] )
   
         this.move.active = -1
     }
@@ -227,26 +228,32 @@ class ImageMapper extends Component {
             this.move.offset.x = this.move.current.x
             this.move.offset.y = this.move.current.y
     
-            // let draggedPoint = this.handles[ this.move.active ]
-            // this.setMoveTranslate( this.move.current.x, this.move.current.y, draggedPoint )
+            let draggedPoint = this.handles[ this.move.active ]
+            this.setMoveTranslate( this.move.current.x, this.move.current.y, draggedPoint )
             
-            let naturalPointPosition = this.recalculatePointNaturalPosition( this.move.current.x, this.move.current.y )
-            this.setState( prevState => {
-                let draggedPoint = prevState.points[ this.move.active ]
-                draggedPoint = {
-                    x: this.move.currentPoint.x + naturalPointPosition.x,
-                    y: this.move.currentPoint.y + naturalPointPosition.y,
-                }
-                prevState.points[ this.move.active ] = draggedPoint
-                return {
-                    points: [ ...prevState.points ]
-                }
-            })
+            // let naturalPointPosition = this.recalculatePointNaturalPosition( this.move.current.x, this.move.current.y )
+            // this.setState( prevState => {
+            //     let draggedPoint = prevState.points[ this.move.active ]
+            //     draggedPoint = {
+            //         x: this.move.currentPoint.x + naturalPointPosition.x,
+            //         y: this.move.currentPoint.y + naturalPointPosition.y,
+            //     }
+            //     prevState.points[ this.move.active ] = draggedPoint
+            //     return {
+            //         points: [ ...prevState.points ]
+            //     }
+            // })
         }
     }
     setMoveTranslate( x, y, draggedPoint ) {
+        let canvasPosition = this.canvas.getBoundingClientRect()
         let naturalPointPosition = this.recalculatePointNaturalPosition( x, y )
+        let initialPointPosition = this.recalculatePointNaturalPosition( this.move.initial.x - canvasPosition.x, this.move.initial.y - canvasPosition.y )
         draggedPoint.style.transform = "translate3d( " + naturalPointPosition.x + "px, " + naturalPointPosition.y + "px, 0 )"
+
+        this.state.points[ this.move.active ].x = initialPointPosition.x + naturalPointPosition.x
+        this.state.points[ this.move.active ].y = initialPointPosition.y + naturalPointPosition.y
+        this.updatePathCoordinates()
     }
     /**
      * Rewrite translate values to <circle> position attributes and clear offset properties.
@@ -265,6 +272,21 @@ class ImageMapper extends Component {
         /** Rewrite position. */
         draggedPoint.setAttribute( 'cx', initialPosition.x + naturalPointPosition.x )
         draggedPoint.setAttribute( 'cy', initialPosition.y + naturalPointPosition.y )
+
+        
+        // let naturalPointPosition = this.recalculatePointNaturalPosition( this.move.current.x, this.move.current.y )
+        // this.setState( prevState => {
+        //     let draggedPoint = prevState.points[ this.move.active ]
+        //     draggedPoint = {
+        //         x: this.move.currentPoint.x + naturalPointPosition.x,
+        //         y: this.move.currentPoint.y + naturalPointPosition.y,
+        //     }
+        //     prevState.points[ this.move.active ] = draggedPoint
+        //     return {
+        //         points: [ ...prevState.points ]
+        //     }
+        // })
+        this.setState()
         
         /** Clear offset properties. */
         this.move.initial = { x: null, y: null }
